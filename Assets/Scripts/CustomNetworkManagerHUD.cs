@@ -16,6 +16,11 @@ public class CustomNetworkManagerHUD : MonoBehaviour
 	[SerializeField]
 	private int offsetY;
 
+	[SerializeField]
+	private int designWidth;
+	[SerializeField]
+	private int designHeight;
+
 	// Runtime variable
 	bool m_ShowServer;
 
@@ -65,8 +70,8 @@ public class CustomNetworkManagerHUD : MonoBehaviour
 		int ypos = 40 + offsetY;
 		const int spacing = 24;
 
-		var rx = (float)Screen.width / 640;
-		var ry = (float)Screen.height / 480;
+		var rx = (float)Screen.width / designWidth;
+		var ry = (float)Screen.height / designHeight;
 		GUI.matrix = Matrix4x4.TRS(new Vector3(0, 0, 0), Quaternion.identity, new Vector3(rx, ry, 1));
 		Debug.Log("rx=" + rx + ", ry=" + ry);
 
