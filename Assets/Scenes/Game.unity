@@ -628,7 +628,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 1164719952}
   - 114: {fileID: 1164719951}
-  - 114: {fileID: 1164719953}
+  - 114: {fileID: 1164719954}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -719,7 +719,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
---- !u!114 &1164719953
+--- !u!114 &1164719954
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -727,10 +727,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1164719950}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 227461547, guid: 870353891bb340e2b2a9c8707e7419ba, type: 3}
+  m_Script: {fileID: 11500000, guid: 9b7433a62918fc248844583c401190fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
   showGUI: 1
   offsetX: 0
   offsetY: 0
