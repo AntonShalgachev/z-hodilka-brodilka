@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 using System.Collections;
 
+[RequireComponent(typeof(Name), typeof(Animator))]
 public class SpiderController : NetworkBehaviour
 {
 	[SerializeField]
@@ -10,49 +12,64 @@ public class SpiderController : NetworkBehaviour
 	private float angularVelocity;
 
 	[SerializeField]
-	private float eps = 0.01f;
+	private float eps;
 	[SerializeField]
-	private float epsAng = 1.0f;
+	private float epsAng;
 
 	private Vector2 target;
-
-	private Rigidbody2D body;
 	private Animator animator;
-
 	private Rect terrainRect;
+	private MatchManager matchManager;
 
 	public override void OnStartLocalPlayer()
 	{
 		base.OnStartLocalPlayer();
-		//var camera = GameObject.FindGameObjectWithTag("MainCamera");
-		var camera = Camera.main;
 
+		var camera = Camera.main;
 		var follower = camera.GetComponent<Follower>();
 		Debug.Assert(follower != null, "Camera has to have Follower component");
-
-		follower.subject = gameObject;
-
-		target = transform.position;
-
-		animator = GetComponent<Animator>();
-		body = GetComponent<Rigidbody2D>();
 
 		var terrainObject = GameObject.Find("Terrain");
 		Debug.Assert(terrainObject != null, "Can't find Terrain object");
 		var terrain = terrainObject.GetComponent<TerrainGenerator>();
 		Debug.Assert(terrain != null, "Terrain doesn't contain TerrainGenerator");
 
+		follower.subject = gameObject;
+		target = transform.position;
+
 		terrainRect = terrain.GetRect();
+
+		var nameObject = GameObject.FindGameObjectWithTag("PlayerName") as GameObject;
+		Debug.Assert(nameObject != null);
+		var nameText = nameObject.GetComponent<Text>();
+		Debug.Assert(nameText != null);
+
+		if (nameText.text != "")
+			CmdSetName(nameText.text);
+		else
+			CmdSetName("Unknown Player");
+
+		matchManager = GameObject.Find("MatchManager").GetComponent<MatchManager>();
+		matchManager.OnMatchStart();
+	}
+
+	[Command]
+	void CmdSetName(string name)
+	{
+		GetComponent<Name>().SetName(name);
 	}
 
 	void Start ()
 	{
-
+		animator = GetComponent<Animator>();
 	}
 	
 	void Update ()
 	{
 		if (!isLocalPlayer)
+			return;
+
+		if (matchManager.MatchEnded())
 			return;
 
 		if (Input.GetMouseButtonUp(0))
@@ -63,13 +80,16 @@ public class SpiderController : NetworkBehaviour
 			if (terrainRect.Contains(worldPosition))
 			{
 				target = worldPosition;
-				animator.SetTrigger("StartMoving");
+				CmdSetMoving(true);
 			}
 		}
 	}
 
 	void FixedUpdate()
 	{
+		if (!isLocalPlayer)
+			return;
+
 		var direction = target - (Vector2)transform.position;
 
 		if (direction.magnitude > eps)
@@ -82,20 +102,32 @@ public class SpiderController : NetworkBehaviour
 
 			var currentAngle = transform.rotation.eulerAngles.z;
 			var targetAngle = currentAngle + dangle;
-			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0.0f, 0.0f, targetAngle), angularVelocity * Time.deltaTime);
+			transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(0.0f, 0.0f, targetAngle), angularVelocity * Time.fixedDeltaTime);
 
 			if (Mathf.Abs(dangle) < epsAng)
 			{
 				transform.rotation = Quaternion.Euler(0.0f, 0.0f, targetAngle);
 
-				transform.position = Vector2.MoveTowards(transform.position, target, velocity * Time.deltaTime);
+				transform.position = Vector2.MoveTowards(transform.position, target, velocity * Time.fixedDeltaTime);
 
 				if ((target - (Vector2)transform.position).magnitude < eps)
 				{
 					transform.position = target;
-					animator.SetTrigger("StopMoving");
+					CmdSetMoving(false);
 				}
 			}
 		}
+	}
+
+	[Command]
+	void CmdSetMoving(bool moving)
+	{
+		RpcSetMoving(moving);
+	}
+
+	[ClientRpc]
+	void RpcSetMoving(bool moving)
+	{
+		animator.SetBool("Moving", moving);
 	}
 }
